@@ -49,7 +49,7 @@ server {
 }
 EOF
 
-    sudo ln -s /etc/nginx/sites-available/$SUBDOMAIN.conf /etc/nginx/sites-enabled/
+    sudo ln -s /etc/nginx/sites-available/$SUBDOMAIN.conf /etc/nginx/sites-enabled/$SUBDOMAIN.conf
     sudo nginx -s reload
 
     # Keep the script running
