@@ -1,8 +1,8 @@
 # Tunneling script
 
-Show your application to the world! This tool reverse forwards you applications on the localhost to a dynamically created URL that anybody can view at any point in the world.
+Dunnel is a reverse forwarding tool that helps your applications on the localhost to be forwarded to a dynamically created URL that anybody can view at any point in the world.
 
-## How this script works under the hood - The tunnel script
+## How this script works  - The Dunnel script
 
 This script begins by defining the tool's domain, the path to the file that contains the ports, the base ports, and a random 8-digit number to create a subdomain.
 
@@ -43,6 +43,8 @@ After creating the random subdomain, next create a `new_connection()` function. 
 
 ```
 function newconnection() {
+    local ssh_command="$@"
+    local local_port=$(echo "$ssh_command" | awk -F: '{print $NF}')
     local remote_port=$(getport)
 
     # Set up iptables rule for this specific SUBDOMAIN
@@ -65,7 +67,7 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/tunnelprime.online/privkey.pem
 
     location / {
-        proxy_pass http://localhost:$remote_port;
+        proxy_pass http://localhost:$local_port;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -74,7 +76,7 @@ server {
 }
 EOF
 
-    sudo ln -s /etc/nginx/sites-available/$SUBDOMAIN.conf /etc/nginx/sites-enabled/
+    sudo ln -s /etc/nginx/sites-available/$SUBDOMAIN.conf /etc/nginx/sites-enabled/$SUBDOMAIN.conf
     sudo nginx -s reload
 
     # Keep the script running
@@ -83,8 +85,13 @@ EOF
     done 
 }
 
+# Check if the SSH command was provided as an argument
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 ssh -v -R 80:localhost:<local_port> server@tunnelprime.online"
+    exit 1
+fi
 
-newconnection 3000
+newconnection "$@"
 
 ```
 
